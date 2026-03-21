@@ -5,3 +5,9 @@
 #
 # Example:
 #   MIA:Missing In Action
+IRLS:Iteratively Reweighted Least Squares
+OLS:Ordinary Least Squares
+MAD:Median Absolute Deviation
+RMSE:Root Mean Square Error
+SG0:Segment Guide Sensor 0
+SG1:Segment Guide Sensor 1

@@ -3,9 +3,9 @@
 .. image:: https://github.com/lsst-sitcom/sitcomtn-181/workflows/CI/badge.svg
    :target: https://github.com/lsst-sitcom/sitcomtn-181/actions/
 
-#####################################################################
-Rigid Body Model for Rotator Oscillations from LSSTCam Corner Guiders
-#####################################################################
+########################################################
+Rotator Rigid-Body Model Using LSSTCam Guider Sensors
+########################################################
 
 SITCOMTN-181
 ============
