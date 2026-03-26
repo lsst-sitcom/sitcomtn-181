@@ -34,19 +34,18 @@
 \date{\vcsDate}
 
 \setDocAbstract{%
-We present the framework for extracting the rotator oscillation angle
-$\delta\theta(t)$ from focal-plane centroid measurements of guide stars
-tracked by the four corner guider sensors of LSSTCam.  The observed
-centroid displacements are modelled as a rigid-body motion
-(common-mode translation and rotation about the optical axis) plus
-per-guider residuals from atmospheric and optical distortions.
-Because the optics and atmospheric distortions are guider-dependent
-and can impact our model, we estimate the rigid-body parameters using
-a robust linear regression (M-estimator with iteratively reweighted
-least squares).  We show that transforming to altitude/azimuth
-coordinates via the local WCS Jacobian matrix at each guider position allows
-a clean separation of the linear tracking drift from the
-rigid-body motions.
+We present a framework for extracting the rotator oscillation angle
+$\delta\theta(t)$ from focal-plane centroid measurements of guide
+stars tracked by the four corner guider sensors of LSSTCam.  The
+observed centroid displacements are modelled as a rigid-body
+motion---common-mode translation $(dx, dy)$ and rotation
+$\delta\theta$ about the optical axis---plus per-guider residuals from
+atmospheric and optical distortions.  We fit the three rigid-body
+parameters per frame using a robust M-estimator (Tukey bisquare loss
+with IRLS), and incorporate a linear drift directly into an augmented
+design matrix.  The fitted focal-plane drift slopes are converted to
+altitude/azimuth post hoc via the mean WCS Jacobian matrix for
+physical interpretation.
 }
 
 % Change history defined here.
