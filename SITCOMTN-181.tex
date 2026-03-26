@@ -364,8 +364,8 @@ focal plane, the guider-dependent drift vectors in focal plane are
 nearly parallel and thus nearly degenerate with a common $(dx, dy)$.
 The non-rotational contributions (differential scale, optical
 distortion shear) are much smaller.  Consequently, the practical
-improvement of the hybrid model over a simple focal-plane fit with
-post-hoc detrending is modest.
+improvement of a per-guider $\mathbf{J}_i^{-1}$ model over a simple
+focal-plane fit with post-hoc conversion is modest.
 
 \subsection{Practical Model}
 \label{sec:practical_model}
@@ -687,7 +687,7 @@ $\delta\theta_i$ from the 8 corner guiders.  Panel~2: rigid-body
 $\delta\theta$ solution with $\pm 1$\,MAD noise band and linear drift.
 Panel~3: common-mode translation in alt/az with linear tracking drift
 fits.  Panel~4: focal-plane common-mode translation $(dx, dy)$ from
-the per-frame hybrid fit (oscillatory rigid-body jitter after drift
+the per-frame fit (oscillatory rigid-body jitter after drift
 removal).}
 \label{fig:detrended}
 \end{figure}
