@@ -44,7 +44,7 @@ Because the optics and atmospheric distortions are guider-dependent
 and can impact our model, we estimate the rigid-body parameters using
 a robust linear regression (M-estimator with iteratively reweighted
 least squares).  We show that transforming to altitude/azimuth
-coordinates via the local WCS Jacobian at each guider position allows
+coordinates via the local WCS Jacobian matrix at each guider position allows
 a clean separation of the linear tracking drift from the
 rigid-body motions.
 }
@@ -281,8 +281,9 @@ position:
 \end{equation}
 
 \noindent
-where $\mathbf{J}_i$ is the $2\times 2$ WCS Jacobian (the CD matrix
-in FITS convention) evaluated at the position of guider $i$.  It
+where $\mathbf{J}_i$ is the $2\times 2$ WCS Jacobian matrix (the CD
+matrix in FITS convention, not the determinant) evaluated at the
+position of guider $i$.  It
 encodes:
 \begin{enumerate}
 \item The \textbf{plate scale} (${\sim}\,20\;\mathrm{arcsec/mm}$),
@@ -355,6 +356,16 @@ as non-common residuals, since a common $(dx, dy)$ in focal plane
 produces slightly different $(\delta\mathrm{alt}, \delta\mathrm{az})$
 for each guider (at the level of the off-diagonal variations in
 $\mathbf{J}_i$, ${\sim}\,5\%$).
+
+\emph{Remark.}  In practice, the off-diagonal terms of $\mathbf{J}_i$
+are dominated by the local position angle rotation at each guider.
+Since the position angles differ by only a few degrees across the
+focal plane, the guider-dependent drift vectors in focal plane are
+nearly parallel and thus nearly degenerate with a common $(dx, dy)$.
+The non-rotational contributions (differential scale, optical
+distortion shear) are much smaller.  Consequently, the practical
+improvement of the hybrid model over a simple focal-plane fit with
+post-hoc detrending is modest.
 
 \subsection{Hybrid Model}
 \label{sec:hybrid_model}
@@ -560,7 +571,9 @@ The per-guider residuals $\eta_i$ can exhibit:
 \item Badly defined PSFs driven by turbulence or optical distortions
 \item Occasional large outliers from saturated stars, poor PSF fits,
   or star trails
-\item Guider-to-guider variance differences (heteroscedasticity)
+\item Guider-to-guider variance differences (heteroscedasticity),
+  arising from differences in guide star brightness, SNR, and PSF
+  quality across the four corners
 \end{itemize}
 Under these conditions, OLS gives excessive weight to outlier
 measurements, biasing the rigid-body solution.
@@ -613,8 +626,9 @@ the MAD (median absolute deviation):
 \hat{\sigma} = 1.4826 \times \mathrm{median}\bigl(|r_j - \mathrm{median}(r_j)|\bigr)
 \label{eq:mad}
 \end{equation}
-where the factor 1.4826 ensures consistency with the standard
-deviation under Gaussian errors.
+where the factor $1/\Phi^{-1}(3/4) \approx 1.4826$ is the
+Gaussian-consistency factor, ensuring that $\hat{\sigma}$ equals the
+standard deviation when the residuals are normally distributed.
 
 \subsection{Algorithm Summary}
 
@@ -639,7 +653,7 @@ observations and 3 parameters, each iteration is negligible in cost.
 
 \subsection{Uncertainty Estimation}
 
-The covariance of the robust estimator is:
+The covariance of the robust estimator is approximately:
 \begin{equation}
 \mathrm{Cov}(\hat{\mathbf{p}})
 \approx \hat{\sigma}^2\,
@@ -648,6 +662,11 @@ The covariance of the robust estimator is:
 (\mathbf{A}^T \mathbf{W} \mathbf{A})^{-1}
 \label{eq:robust_cov}
 \end{equation}
+
+\noindent
+This is an asymptotic approximation that does not fully account for
+the bias introduced by clipping.  In practice we only use the
+covariance as a rough diagnostic (e.g.\ to flag bad frames), not for formal inference.
 
 For a simpler diagnostic, the robust RMS of $\delta\theta$ across
 frames can be reported using the MAD:
