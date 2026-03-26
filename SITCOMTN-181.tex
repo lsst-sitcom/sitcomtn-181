@@ -367,154 +367,73 @@ distortion shear) are much smaller.  Consequently, the practical
 improvement of the hybrid model over a simple focal-plane fit with
 post-hoc detrending is modest.
 
-\subsection{Hybrid Model}
-\label{sec:hybrid_model}
+\subsection{Practical Model}
+\label{sec:practical_model}
 
-To correctly handle both types of translation, we adopt a
-\textbf{hybrid approach}: the per-frame rigid-body fit operates in
-focal-plane coordinates (where the instantaneous common translation is
-truly common), while the linear tracking drift is modelled as an
-alt/az sky motion that maps to each guider's focal plane through its
-own $\mathbf{J}_i^{-1}$.
+Given the remark above, we adopt the simplest model that explains the
+data: the rigid-body fit operates entirely in focal-plane coordinates,
+with the linear drift included as a common-mode trend.  The drift
+slopes are converted to alt/az \emph{post hoc} via the mean WCS
+Jacobian $\bar{\mathbf{J}} = \frac{1}{N}\sum_i \mathbf{J}_i$ for
+physical interpretation.
 
-The full model for guider $i$ at time $t$ in focal-plane coordinates
-is:
+The full model for guider $i$ at time $t$ is:
 \begin{equation}
 \boxed{
 \begin{aligned}
-\delta x_i(t) &= dx(t)
-  + \bigl[\mathbf{J}_i^{-1}\bigr]_{x}\,
-    \begin{pmatrix} \alpha_0 + \alpha\,t \\
-                     \beta_0 + \beta\,t \end{pmatrix}
-  - \delta\theta(t)\;\Riy
+\delta x_i(t) &= \bigl(dx_0 + \dot{x}\,t\bigr) + dx_{\mathrm{osc}}(t)
+  - \bigl(\theta_0 + \omega\,t + \widetilde{\delta\theta}(t)\bigr)\;\Riy
   + \eta_{x_i}(t) \\[4pt]
-\delta y_i(t) &= dy(t)
-  + \bigl[\mathbf{J}_i^{-1}\bigr]_{y}\,
-    \begin{pmatrix} \alpha_0 + \alpha\,t \\
-                     \beta_0 + \beta\,t \end{pmatrix}
-  + \delta\theta(t)\;\Rix
+\delta y_i(t) &= \bigl(dy_0 + \dot{y}\,t\bigr) + dy_{\mathrm{osc}}(t)
+  + \bigl(\theta_0 + \omega\,t + \widetilde{\delta\theta}(t)\bigr)\;\Rix
   + \eta_{y_i}(t)
 \end{aligned}
 }
-\label{eq:hybrid_model}
+\label{eq:practical_model}
 \end{equation}
 
 \noindent
-where:
-\begin{itemize}
-\item $dx(t),\; dy(t)$ is the oscillatory focal-plane common-mode
-  translation (mount jitter, wind shake, flexure), fitted per frame.
-\item $\alpha_0 + \alpha\,t,\; \beta_0 + \beta\,t$ is the
-  linear tracking drift in alt/az, which maps to a
-  \emph{guider-dependent} focal-plane displacement via
-  $\mathbf{J}_i^{-1}$.
-\item $\delta\theta(t)$ is the rotation, which may also contain a
-  slow drift: $\delta\theta(t) = \theta_0 + \omega\,t +
-  \widetilde{\delta\theta}(t)$.
-\end{itemize}
-
-\noindent
-The \textbf{alt/az rotation lever arms} remain:
-\begin{equation}
-\begin{pmatrix} a_i \\ b_i \end{pmatrix}
-= \mathbf{J}_i
-\begin{pmatrix} -\Riy \\ +\Rix \end{pmatrix}
-\label{eq:lever_def}
-\end{equation}
-
-\noindent
-These are guider-dependent: they differ for each star because both
-$\mathbf{J}_i$ and $(\Rix, \Riy)$ vary across the focal plane.  For
-LSSTCam, the effective lever arms are
-$|(a_i, b_i)| \approx 320$--$350$\,mm (reflecting the corner guider
-distances from the optical axis).
+where $(dx_0 + \dot{x}\,t,\; dy_0 + \dot{y}\,t)$ is the linear
+translation trend (common to all guiders in the focal plane),
+$(dx_{\mathrm{osc}}, dy_{\mathrm{osc}})$ is the oscillatory
+focal-plane jitter fitted per frame, and $(\theta_0 + \omega\,t)$ is
+the rotation trend.
 
 %======================================================================
-\section{Hybrid Estimation}
+\section{Estimation}
 \label{sec:estimation}
 
-Following the discussion in Section~\ref{sec:hybrid_model}, the
-estimation proceeds in two steps: (1)~a global augmented fit for the
-linear tracking drift, working in focal-plane coordinates with
-per-guider $\mathbf{J}_i^{-1}$ mappings; and (2)~per-frame robust
-fits of the residuals using the standard focal-plane design matrix.
+The estimation proceeds in two steps: (1)~a global augmented fit for
+the linear trends, and (2)~per-frame robust fits of the residuals.
+Both operate in focal-plane coordinates using the standard design
+matrix (Eq.~\ref{eq:designmatrix_fp}).
 
-\subsection{Per-Frame Linear System (Focal Plane)}
-
-At each time step, the $2N$ focal-plane displacement measurements are
-related to the parameter vector
-$\mathbf{p} = (dx,\; dy,\; \delta\theta)^T$ by:
-\begin{equation}
-\mathbf{A}\,\mathbf{p} = \mathbf{d} - \symbf{\eta}
-\end{equation}
-where the design matrix is the standard focal-plane form
-(Eq.~\ref{eq:designmatrix_fp}):
-\begin{equation}
-\mathbf{A}_{\mathrm{fp}} =
-\begin{pmatrix}
-1 & 0 & -R_{1y} \\
-0 & 1 & +R_{1x} \\
-\vdots & \vdots & \vdots \\
-1 & 0 & -R_{Ny} \\
-0 & 1 & +R_{Nx}
-\end{pmatrix},
-\qquad
-\mathbf{d} =
-\begin{pmatrix}
-\delta x_1 \\ \delta y_1 \\
-\vdots \\
-\delta x_N \\ \delta y_N
-\end{pmatrix}
-\label{eq:designmatrix_fp2}
-\end{equation}
-
-\noindent
-The first two columns extract the common-mode translation (identical
-for all guiders in focal-plane coordinates); the third column extracts
-$\delta\theta$ via the focal-plane lever arms $(-\Riy, +\Rix)$.
-
-\subsection{Incorporating the Linear Tracking Drift}
+\subsection{Augmented Fit for Linear Trends}
 \label{sec:augmented}
 
-The linear tracking drift is a sky motion in alt/az, but we
-incorporate it into the focal-plane system by mapping it to each
-guider's focal plane through $\mathbf{J}_i^{-1}$.  The augmented
-parameter vector is:
+We incorporate the linear drift directly by stacking all $T$ frames
+into a single system.  The augmented parameter vector is:
 \begin{equation}
 \mathbf{p}_{\mathrm{trend}}
-= \bigl(\alpha_0,\;\alpha,\;
-         \beta_0,\;\beta,\;
+= \bigl(dx_0,\;\dot{x},\;
+         dy_0,\;\dot{y},\;
          \theta_0,\;\omega\bigr)^T
 \label{eq:ptrend}
 \end{equation}
 
 \noindent
-where $(\alpha_0, \alpha)$ and $(\beta_0, \beta)$ are
-the intercept and drift rate of the tracking error in altitude and
-azimuth, respectively.
-
-For star $i$ at time $t_k$, denoting
-$\mathbf{J}_i^{-1} = \bigl(\begin{smallmatrix} c_{i,00} & c_{i,01}
-\\ c_{i,10} & c_{i,11} \end{smallmatrix}\bigr)$, the two rows of the
-augmented design matrix $\widetilde{\mathbf{A}}$ are:
+For star $i$ at time $t_k$, the two rows of the augmented design
+matrix $\widetilde{\mathbf{A}}$ are:
 \begin{equation}
 \widetilde{\mathbf{A}}_{ik} =
 \begin{pmatrix}
-c_{i,00} & c_{i,00}\,t_k & c_{i,01} & c_{i,01}\,t_k & -\Riy & -\Riy\,t_k \\
-c_{i,10} & c_{i,10}\,t_k & c_{i,11} & c_{i,11}\,t_k & +\Rix & +\Rix\,t_k
+1 & t_k & 0 & 0 & -\Riy & -\Riy\,t_k \\
+0 & 0   & 1 & t_k & +\Rix & +\Rix\,t_k
 \end{pmatrix}
 \label{eq:augmented_A}
 \end{equation}
 
 \noindent
-The first four columns encode the tracking drift mapped to the focal
-plane of each guider via $\mathbf{J}_i^{-1}$, and the last two
-columns encode the rotation trend.  Crucially, the coefficients
-$c_{i,jk}$ \emph{vary across guiders}---the off-diagonal terms of
-$\mathbf{J}_i^{-1}$ flip sign between left and right rafts
-(${\sim}\,5\%$ of the diagonal), providing the leverage to separate
-the alt/az drift from focal-plane rigid-body motions.
-
 Stacking over all $N$ stars and $T$ frames gives a
 $(2NT \times 6)$ system:
 \begin{equation}
@@ -527,38 +446,45 @@ $(2NT \times 6)$ system:
 A robust fit of this system (Section~\ref{sec:robust}) yields the six
 trend parameters simultaneously.
 
+\subsection{Post-Hoc Conversion to Alt/Az}
+
+The fitted focal-plane drift slopes $(\dot{x}, \dot{y})$ are
+converted to alt/az for interpretation:
+\begin{equation}
+\begin{pmatrix} \alpha \\ \beta \end{pmatrix}
+= \bar{\mathbf{J}}
+\begin{pmatrix} \dot{x} \\ \dot{y} \end{pmatrix}
+\label{eq:posthoc_altaz}
+\end{equation}
+
+\noindent
+where $\alpha$ and $\beta$ are the tracking drift rates in altitude
+and azimuth.  The same conversion applies to the intercepts
+$(dx_0, dy_0)$.
+
 \subsection{Per-Frame Residual Fit}
 \label{sec:perframe_resid}
 
-For each frame $k$, the trend prediction for guider $i$ is subtracted
-in focal-plane coordinates:
+For each frame $k$, the trend is subtracted:
 \begin{equation}
-\mathbf{r}_{i,k} =
-\begin{pmatrix} \delta x_i \\ \delta y_i \end{pmatrix}_{\!\!k}
-- \mathbf{J}_i^{-1}
+\mathbf{r}_{k} = \mathbf{d}_k
+- \mathbf{A}_{\mathrm{fp}}
   \begin{pmatrix}
-  \alpha_0 + \alpha\,t_k \\
-  \beta_0 + \beta\,t_k
+  dx_0 + \dot{x}\,t_k \\
+  dy_0 + \dot{y}\,t_k \\
+  \theta_0 + \omega\,t_k
   \end{pmatrix}
-- \begin{pmatrix}
-  -\Riy \\ +\Rix
-  \end{pmatrix}
-  (\theta_0 + \omega\,t_k)
 \label{eq:trend_residuals}
 \end{equation}
 
 \noindent
-Note that the trend subtraction is \emph{guider-dependent} because
-each guider has its own $\mathbf{J}_i^{-1}$.  The stacked residuals
-$\mathbf{r}_k$ are then fit with the standard focal-plane design
-matrix $\mathbf{A}_{\mathrm{fp}}$ robustly:
+The residuals $\mathbf{r}_k$ are then fit with the standard
+focal-plane design matrix $\mathbf{A}_{\mathrm{fp}}$ robustly:
 \begin{equation}
 \mathbf{A}_{\mathrm{fp}}\,\widetilde{\mathbf{p}}_k = \mathbf{r}_k
 \end{equation}
 yielding the detrended oscillatory parameters
 $(dx_k,\; dy_k,\; \widetilde{\delta\theta}_k)$ at each time step.
-These are now truly focal-plane common-mode motions, free of the
-tracking drift.
 
 %======================================================================
 \section{Robust Estimation}
@@ -777,21 +703,14 @@ removal).}
   $\delta\theta$ about the optical axis---and a per-guider
   atmospheric/optical residual (Eq.~\ref{eq:displacement}).
 
-\item Common-mode translations arise in two distinct frames:
-  focal-plane rigid-body motions (rotator shift, flexure) are common
-  in focal-plane coordinates, while the tracking drift is common in
-  alt/az.  A purely alt/az model conflates the two; we therefore adopt
-  a hybrid approach (Section~\ref{sec:hybrid_model}) that fits
-  per-frame translations in the focal plane and models the tracking
-  drift via per-guider $\mathbf{J}_i^{-1}$ mappings
-  (Eq.~\ref{eq:hybrid_model}).
-
-\item The linear tracking drift is incorporated directly into the
-  augmented design matrix (Eq.~\ref{eq:augmented_A}), where the
-  $\mathbf{J}_i^{-1}$ coefficients vary across guiders, providing the
-  leverage to separate sky-frame drift from focal-plane motions.
-  Per-frame residuals are then fit with the standard focal-plane
-  design matrix for $(dx, dy, \delta\theta)$.
+\item The rigid-body fit operates entirely in focal-plane coordinates,
+  where the common-mode translation is truly common for all guiders.
+  A linear drift is included in the augmented design matrix
+  (Eq.~\ref{eq:augmented_A}) and the fitted slopes are converted to
+  alt/az post hoc via the mean WCS Jacobian for interpretation
+  (Section~\ref{sec:practical_model}).  Per-frame residuals are then
+  fit with the standard focal-plane design matrix for
+  $(dx, dy, \delta\theta)$.
 
 \item The rigid-body parameters are estimated using a robust
   M-estimator (Tukey bisquare loss with IRLS), which downweights
@@ -810,6 +729,9 @@ removal).}
 \appendix
 
 \section{Acknowledgements}
+
+This document was prepared with assistance from Claude (Anthropic,
+model claude-opus-4-6), used as a coding and writing aid.
 
 This material is based upon work supported in part by the National Science Foundation through Cooperative Agreements AST-1258333 and AST-2241526 and Cooperative Support Agreements AST-1202910 and AST-2211468 managed by the Association of Universities for Research in Astronomy (AURA), and the Department of Energy under Contract No.\ DE-AC02-76SF00515 with the SLAC National Accelerator Laboratory managed by Stanford University.
 Additional Rubin Observatory funding comes from private donations, grants to universities, and in-kind support from LSST-DA Institutional Members.
