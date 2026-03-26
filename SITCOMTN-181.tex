@@ -348,29 +348,14 @@ We therefore distinguish two types of common-mode translation:
   plane.
 \end{enumerate}
 
-\noindent
-A model that works entirely in alt/az and assumes all translations are
-common in that frame would misattribute focal-plane rigid-body motions
-as non-common residuals, since a common $(dx, dy)$ in focal plane
-produces slightly different $(\delta\mathrm{alt}, \delta\mathrm{az})$
-for each guider (at the level of the off-diagonal variations in
-$\mathbf{J}_i$, ${\sim}\,5\%$).
-
-\emph{Remark.}  In practice, the off-diagonal terms of $\mathbf{J}_i$
-are dominated by the local position angle rotation at each guider.
-Since the position angles differ by only a few degrees across the
-focal plane, the guider-dependent drift vectors in focal plane are
-nearly parallel and thus nearly degenerate with a common $(dx, dy)$.
-The non-rotational contributions (differential scale, optical
-distortion shear) are much smaller.  Consequently, the practical
-improvement of a per-guider $\mathbf{J}_i^{-1}$ model over a simple
-focal-plane fit with post-hoc conversion is modest.
-
 \subsection{Practical Model}
 \label{sec:practical_model}
 
-Given the remark above, we adopt the simplest model that explains the
-data: the rigid-body fit operates entirely in focal-plane coordinates,
+Since the off-diagonal terms of $\mathbf{J}_i$ are small
+(${\sim}\,5\%$ of the diagonal) and dominated by position angle
+rotation, a common $(dx, dy)$ in focal plane is an excellent
+approximation.  We therefore adopt the simplest model: the rigid-body
+fit operates entirely in focal-plane coordinates,
 with the linear drift included as a common-mode trend.  The drift
 slopes are converted to alt/az \emph{post hoc} via the mean WCS
 Jacobian $\bar{\mathbf{J}} = \frac{1}{N}\sum_i \mathbf{J}_i$ for
